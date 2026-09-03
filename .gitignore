@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Robot arm camera recordings (large videos, generated locally)
+camera_recordings/

@@ -1,0 +1,45 @@
+{
+  "timestamp": 1785312875.946677,
+  "slope": 1.1178597010062772,
+  "intercept": 50.59904411718501,
+  "master_range": [
+    2073.0,
+    3580.0
+  ],
+  "puppet_range": [
+    1789.0,
+    3097.0
+  ],
+  "data": [
+    {
+      "position_name": "\u5b8c\u5168\u6253\u5f00\uff08100%\uff09",
+      "master_gripper": 3580,
+      "puppet_gripper": 3097,
+      "unit": "raw_register"
+    },
+    {
+      "position_name": "\u6253\u5f0075%",
+      "master_gripper": 2957,
+      "puppet_gripper": 2685,
+      "unit": "raw_register"
+    },
+    {
+      "position_name": "\u6253\u5f0050%\uff08\u534a\u5f00\uff09",
+      "master_gripper": 2433,
+      "puppet_gripper": 2146,
+      "unit": "raw_register"
+    },
+    {
+      "position_name": "\u6253\u5f0025%",
+      "master_gripper": 2223,
+      "puppet_gripper": 1924,
+      "unit": "raw_register"
+    },
+    {
+      "position_name": "\u5b8c\u5168\u5173\u95ed\uff080%\uff09",
+      "master_gripper": 2073,
+      "puppet_gripper": 1789,
+      "unit": "raw_register"
+    }
+  ]
+}
