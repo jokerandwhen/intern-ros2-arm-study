@@ -273,60 +273,6 @@ python record_replay.py record grasp_demo   # Record
 python record_replay.py smooth grasp_demo  # Smoothed playback
 ```
 
-## Hardware Troubleshooting Notes
-
-A large share of the internship went into servo fault troubleshooting. Key lessons are summarized below.
-
-### STS3215 Register Map (field-corrected)
-
-> Note: the servos used in this project (model 2563, model code 0x0A03) have a register layout that differs from the standard STS/SCS documentation. Findings from field testing:
-> Addresses 11–14 are the **angle limit** bytes, not voltage registers. Address 14 was once misread as Max_Voltage=15; it is actually the high byte of Max_Angle=4095, i.e. 0x0F.
-
-| Register | Address | Size | Description |
-|----------|---------|------|-------------|
-| Min_Position_Limit | 9–10 | 2 bytes | Minimum position limit |
-| Max_Position_Limit | 11–12 | 2 bytes | Maximum position limit |
-| Max_Temperature_Limit | 13 | 1 byte | Max temperature (80 °C) |
-| Max_Voltage_Limit | 14 | 1 byte | Max voltage (16 V) |
-| Min_Voltage_Limit | 15 | 1 byte | Min voltage (5 V) |
-| Torque_Limit | 16–17 | 2 bytes | Torque limit |
-| Torque_Enable | 40 | 1 byte | Torque enable (SRAM, writable) |
-| Acceleration | 41 | 1 byte | Acceleration (SRAM, writable) |
-| Goal_Position | 42 | 2 bytes | Target position (SRAM, writable) |
-| Fault status | 48 | 1 byte | Writing 0 clears the fault latch |
-| EEPROM Lock | 55 | 1 byte | 0=unlocked, 1=locked |
-| Present_Position | 56 | 2 bytes | Current position (read-only) |
-| Present_Voltage | 62 | 1 byte | Current voltage (read-only) |
-| Present_Temp | 63 | 1 byte | Current temperature (read-only) |
-| Status | 65 | 1 byte | Status/error (read-only) |
-
-### Red-LED Flashing Repair Procedure (final version, `fix/fix_all_led.py`)
-
-1. Verify the power wiring (leader arm 12 V / follower arm 5 V, driver-board jumper shorted for common ground);
-2. Clear the fault latch: write 0 to address 48;
-3. Unlock the EEPROM: write 0 to address 55;
-4. Set the angle limits: write 0 to address 11 (2 bytes), write 4095 to address 13 (2 bytes);
-5. Re-lock the EEPROM: write 1 to address 55;
-6. Clear the fault again: write 0 to address 48;
-7. **Power-cycle and wait ~10 seconds** for the new EEPROM values to take effect.
-
-### Routine Serial-Fault Escalation
-
-```
-python diagnosis\check_ports.py          # Routine check
-# fails ↓
-python main\smart_mapping.py             # Run as administrator
-# still fails ↓
-Reboot the PC                            # Releases the occupied serial port
-```
-
-### Miscellaneous Lessons
-
-- **Gripper calibration**: run `main/calibrate_gripper.py` and set five openings in order — fully open (100%) → 75% → 50% → 25% → fully closed (0%);
-- **Joint mapping**: the shoulder_lift joint must not use a simple value inversion; the mapping formula must be redesigned so both arms move in the same direction;
-- **Visual servo direction**: object on the right of the frame (dx>0) → increase pan (arm turns left so the camera turns right); object on the left (dx<0) → decrease pan;
-- **Angle limits**: shoulder_lift is limited to −160°~150°, shoulder_pan to −40°~170°.
-
 ## Safety Notes
 
 1. **Write operations are only allowed on SRAM registers (addresses 40, 41, 48, 42)**; do not modify EEPROM (addresses 9–39, 55) or any permanently stored hardware configuration, unless explicitly following the repair procedure;
