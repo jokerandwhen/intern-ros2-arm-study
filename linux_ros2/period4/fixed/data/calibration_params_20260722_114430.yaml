@@ -1,0 +1,46 @@
+# SO-ARM101 校准参数
+# 生成时间: 2026-07-22 11:44:30.528192
+
+joints:
+  shoulder_pan:
+    min_deg: 0.00
+    max_deg: 183.16
+    range_deg: 183.16
+    min_rad: 0.0000
+    max_rad: 3.1968
+
+  shoulder_lift:
+    min_deg: 0.00
+    max_deg: 181.23
+    range_deg: 181.23
+    min_rad: 0.0000
+    max_rad: 3.1631
+
+  elbow_flex:
+    min_deg: 0.00
+    max_deg: 180.44
+    range_deg: 180.44
+    min_rad: 0.0000
+    max_rad: 3.1493
+
+  wrist_flex:
+    min_deg: 0.00
+    max_deg: 178.15
+    range_deg: 178.15
+    min_rad: 0.0000
+    max_rad: 3.1094
+
+  wrist_roll:
+    min_deg: 0.00
+    max_deg: 181.76
+    range_deg: 181.76
+    min_rad: 0.0000
+    max_rad: 3.1723
+
+  gripper:
+    min_deg: 0.00
+    max_deg: 172.79
+    range_deg: 172.79
+    min_rad: 0.0000
+    max_rad: 3.0158
+

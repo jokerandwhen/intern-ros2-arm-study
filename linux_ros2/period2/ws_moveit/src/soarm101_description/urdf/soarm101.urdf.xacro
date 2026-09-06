@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="soarm101">
+
+  <!-- Include ros2_control configuration -->
+  <xacro:include filename="$(find soarm101_description)/urdf/soarm101.ros2_control.xacro"/>
+
+  <!--
+    SOARM101 (SO-ARM101) by Hiwonder / TheRobotStudio
+    6-DOF robot arm, working radius ~350mm
+    Servos: STS3215 bus servos, 30 kg.cm @ 12V
+    Link names follow LeRobot convention:
+      base_link -> shoulder_link -> upper_arm_link -> forearm_link -> wrist_link -> hand_link -> gripper
+    Joint names follow LeRobot convention:
+      shoulder_pan, shoulder_lift, elbow_flex, wrist_flex, wrist_roll, gripper
+  -->
+
+  <!-- Colors -->
+  <material name="soarm_dark_blue">
+    <color rgba="0.1 0.15 0.35 1.0"/>
+  </material>
+  <material name="soarm_light_blue">
+    <color rgba="0.2 0.35 0.65 1.0"/>
+  </material>
+  <material name="soarm_grey">
+    <color rgba="0.45 0.45 0.48 1.0"/>
+  </material>
+  <material name="soarm_dark_grey">
+    <color rgba="0.25 0.25 0.28 1.0"/>
+  </material>
+  <material name="soarm_white">
+    <color rgba="0.9 0.9 0.92 1.0"/>
+  </material>
+  <material name="soarm_black">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+
+  <!-- World link (dummy root for KDL compatibility) -->
+  <link name="world"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ==================== BASE ==================== -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.048" length="0.035"/>
+      </geometry>
+      <material name="soarm_dark_blue"/>
+      <origin xyz="0 0 0.0175" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.048" length="0.035"/>
+      </geometry>
+      <origin xyz="0 0 0.0175" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <!-- ==================== SHOULDER (Joint 1: base rotation) ==================== -->
+  <link name="shoulder_link">
+    <visual>
+      <!-- Shoulder housing -->
+      <geometry>
+        <box size="0.065 0.048 0.055"/>
+      </geometry>
+      <material name="soarm_dark_blue"/>
+      <origin xyz="0 0 0.0275" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.065 0.048 0.055"/>
+      </geometry>
+      <origin xyz="0 0 0.0275" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <joint name="shoulder_pan" type="revolute">
+    <parent link="base_link"/>
+    <child link="shoulder_link"/>
+    <origin xyz="0 0 0.035" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="10.0" velocity="3.14"/>
+    <dynamics damping="0.5" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== UPPER ARM (Joint 2: shoulder lift) ==================== -->
+  <link name="upper_arm_link">
+    <visual>
+      <!-- Upper arm link - the main long segment -->
+      <geometry>
+        <box size="0.040 0.035 0.130"/>
+      </geometry>
+      <material name="soarm_light_blue"/>
+      <origin xyz="0 0 0.065" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.040 0.035 0.130"/>
+      </geometry>
+      <origin xyz="0 0 0.065" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <joint name="shoulder_lift" type="revolute">
+    <parent link="shoulder_link"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="0 0 0.055" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="10.0" velocity="3.14"/>
+    <dynamics damping="0.5" friction="0.1"/>
+  </joint>
+
+  <!-- ==================== FOREARM (Joint 3: elbow flex) ==================== -->
+  <link name="forearm_link">
+    <visual>
+      <!-- Forearm segment -->
+      <geometry>
+        <box size="0.035 0.030 0.095"/>
+      </geometry>
+      <material name="soarm_light_blue"/>
+      <origin xyz="0 0 0.0475" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.035 0.030 0.095"/>
+      </geometry>
+      <origin xyz="0 0 0.0475" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <joint name="elbow_flex" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin xyz="0 0 0.130" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="8.0" velocity="3.14"/>
+    <dynamics damping="0.3" friction="0.08"/>
+  </joint>
+
+  <!-- ==================== WRIST (Joint 4: wrist flex) ==================== -->
+  <link name="wrist_link">
+    <visual>
+      <!-- Wrist segment -->
+      <geometry>
+        <box size="0.030 0.025 0.065"/>
+      </geometry>
+      <material name="soarm_grey"/>
+      <origin xyz="0 0 0.0325" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.030 0.025 0.065"/>
+      </geometry>
+      <origin xyz="0 0 0.0325" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <joint name="wrist_flex" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_link"/>
+    <origin xyz="0 0 0.095" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="5.0" velocity="3.14"/>
+    <dynamics damping="0.2" friction="0.05"/>
+  </joint>
+
+  <!-- ==================== HAND (Joint 5: wrist roll) ==================== -->
+  <link name="hand_link">
+    <visual>
+      <!-- Hand / wrist roll segment -->
+      <geometry>
+        <cylinder radius="0.018" length="0.040"/>
+      </geometry>
+      <material name="soarm_dark_grey"/>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.018" length="0.040"/>
+      </geometry>
+      <origin xyz="0 0 0.020" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <joint name="wrist_roll" type="revolute">
+    <parent link="wrist_link"/>
+    <child link="hand_link"/>
+    <origin xyz="0 0 0.065" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="3.0" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.03"/>
+  </joint>
+
+  <!-- ==================== GRIPPER (Joint 6: gripper open/close) ==================== -->
+  <link name="gripper">
+    <visual>
+      <!-- Gripper base -->
+      <geometry>
+        <box size="0.035 0.025 0.020"/>
+      </geometry>
+      <material name="soarm_dark_grey"/>
+      <origin xyz="0 0 0.010" rpy="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.035 0.025 0.020"/>
+      </geometry>
+      <origin xyz="0 0 0.010" rpy="0 0 0"/>
+    </collision>
+  </link>
+
+  <joint name="gripper" type="revolute">
+    <parent link="hand_link"/>
+    <child link="gripper"/>
+    <origin xyz="0 0 0.040" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="0.8" effort="2.0" velocity="3.14"/>
+    <dynamics damping="0.05" friction="0.01"/>
+  </joint>
+
+  <!-- End effector link (tool center point) -->
+  <link name="ee_link"/>
+
+  <joint name="ee_joint" type="fixed">
+    <parent link="gripper"/>
+    <child link="ee_link"/>
+    <origin xyz="0 0 0.020" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Add ros2_control -->
+  <xacro:soarm101_ros2_control/>
+
+</robot>

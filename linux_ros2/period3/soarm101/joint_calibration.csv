@@ -1,0 +1,7 @@
+joint_id,joint_name,min_angle,max_angle,range_size,current_angle
+1,shoulder_pan,-139.0,89.0,228.0,-24.7
+2,shoulder_lift,-90.0,90.0,180.0,-48.4
+3,elbow_flex,-135.0,0.0,135.0,0.9
+4,wrist_flex,-90.0,90.0,180.0,-0.7
+5,wrist_roll,-180.0,180.0,360.0,-2.1
+6,gripper,0.0,100.0,100.0,39.8

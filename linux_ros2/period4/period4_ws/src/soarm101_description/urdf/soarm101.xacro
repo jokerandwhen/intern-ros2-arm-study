@@ -1,0 +1,402 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="soarm101">
+
+  <!-- ============================================================================
+       SO-ARM101 6轴机械臂 URDF 模型
+       ============================================================================
+       硬件规格:
+         - 6个STS3215总线舵机，6个运动关节
+         - 整机重量: ~1.5kg
+         - 底座底板: 92mm × 82mm × 12mm
+
+       关节链路:
+         base_link → joint1(底座旋转,Z) → link1(垂直支撑)
+           → joint2(大臂,Y) → link2(大臂,X向前)
+           → joint3(小臂,Y,下方) → link3(小臂,X向前,与link2平行)
+           → joint4(腕部,Y) → link4 → joint5(夹爪自转,X)
+           → link5 → joint6(夹爪开合,平移)
+
+       MoveIt2: arm=[joint1,joint2,joint3,joint4,joint5] gripper=[joint6]
+       ============================================================================ -->
+
+  <material name="white_pla">
+    <color rgba="0.95 0.95 0.92 1.0"/>
+  </material>
+  <material name="black_motor">
+    <color rgba="0.10 0.10 0.10 1.0"/>
+  </material>
+  <material name="red_gripper">
+    <color rgba="0.85 0.15 0.15 1.0"/>
+  </material>
+  <material name="dark_gray">
+    <color rgba="0.25 0.25 0.30 1.0"/>
+  </material>
+
+  <!-- ==================== 惯性宏 ==================== -->
+  <xacro:macro name="box_inertial" params="mass x y z">
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass * (y*y + z*z) / 12}"
+        ixy="0" ixz="0"
+        iyy="${mass * (x*x + z*z) / 12}"
+        iyz="0"
+        izz="${mass * (x*x + y*y) / 12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="cylinder_inertial" params="mass radius height">
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia
+        ixx="${mass * (3*radius*radius + height*height) / 12}"
+        ixy="0" ixz="0"
+        iyy="${mass * (3*radius*radius + height*height) / 12}"
+        iyz="0"
+        izz="${mass * radius*radius / 2}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- 舵机可视化（仅视觉，不含碰撞） -->
+  <xacro:macro name="motor_visual" params="xyz rpy">
+    <visual>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+      <geometry>
+        <box size="0.040 0.040 0.025"/>
+      </geometry>
+      <material name="black_motor"/>
+    </visual>
+  </xacro:macro>
+
+  <!-- ========================================================================
+       base_link - 底座底板  92×82×12mm
+       ======================================================================== -->
+  <link name="base_link">
+    <xacro:box_inertial mass="0.25" x="0.092" y="0.082" z="0.012"/>
+    <visual>
+      <origin xyz="0 0 0.006" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.092 0.082 0.012"/>
+      </geometry>
+      <material name="dark_gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.006" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.092 0.082 0.012"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ========================================================================
+       joint1: 底座旋转(Z轴)  ±360°  1号舵机在底座内部
+       ======================================================================== -->
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 0.012" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="15" velocity="3.14"/>
+    <dynamics damping="0.2" friction="0.2"/>
+  </joint>
+
+  <!--  link1: 垂直支撑柱, 高度0.065m  -->
+  <link name="link1">
+    <xacro:cylinder_inertial mass="0.12" radius="0.025" height="0.065"/>
+    <visual>
+      <origin xyz="0 0 0.0325" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.025" length="0.065"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <xacro:motor_visual xyz="0 0 0.012" rpy="0 0 0"/>
+    <collision>
+      <origin xyz="0 0 0.0325" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.022" length="0.065"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ========================================================================
+       joint2: 肩关节(Y轴俯仰)  2号舵机  link1顶端  link2长度0.088m
+       ======================================================================== -->
+  <joint name="joint2" type="revolute">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="0 0 0.065" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="15" velocity="3.14"/>
+    <dynamics damping="0.2" friction="0.2"/>
+  </joint>
+
+  <!--  link2: 大臂, 沿X向前0.088m, 末端下方连接link3  -->
+  <link name="link2">
+    <xacro:cylinder_inertial mass="0.18" radius="0.012" height="0.088"/>
+    <!-- 主杆 -->
+    <visual>
+      <origin xyz="0.044 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.012" length="0.088"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <!-- 侧杆 -->
+    <visual>
+      <origin xyz="0.044 0.020 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.088"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <!-- 2号舵机 -->
+    <xacro:motor_visual xyz="0 0.020 0" rpy="0 0 0"/>
+    <!-- 末端连接支架: 向上桥接到joint3, link2举着joint3 -->
+    <visual>
+      <origin xyz="0.088 0 0.018" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.020 0.040 0.036"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <!-- 碰撞: 覆盖整段大臂+连接支架 -->
+    <collision>
+      <origin xyz="0.044 0 0.006" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.088 0.036 0.040"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ========================================================================
+       joint3: 肘关节(Y轴)  3号舵机
+       link2末端上方(+0.036m), rpy=π翻转使joint3=0时link3与link2平行
+       ======================================================================== -->
+  <joint name="joint3" type="revolute">
+    <parent link="link2"/>
+    <child link="link3"/>
+    <origin xyz="0.088 0 0.036" rpy="0 3.14159 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="15" velocity="3.14"/>
+    <dynamics damping="0.2" friction="0.2"/>
+  </joint>
+
+  <!--  link3: 小臂, 沿X向前0.076m (经rpy翻转后实际向前)
+       注意: rpy=π使X轴反向, 所以link3内几何体用负X坐标, 翻转后变成正X  -->
+  <link name="link3">
+    <xacro:cylinder_inertial mass="0.15" radius="0.012" height="0.076"/>
+    <!-- 主杆: 中心在X=-0.038, 翻转后中心在X=+0.038 -->
+    <visual>
+      <origin xyz="-0.038 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.012" length="0.076"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <!-- 侧杆 -->
+    <visual>
+      <origin xyz="-0.038 0.020 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.076"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <!-- 3号舵机 -->
+    <xacro:motor_visual xyz="0 0.020 0" rpy="0 0 0"/>
+    <!-- 根部连接件: 从joint3轴到杆体起点 -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.020 0.040 0.020"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <!-- 末端连接件: X=-0.076, 翻转后X=+0.076 -->
+    <visual>
+      <origin xyz="-0.076 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.020 0.040 0.020"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <!-- 碰撞 -->
+    <collision>
+      <origin xyz="-0.038 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.076 0.036 0.030"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ========================================================================
+       joint4: 腕部俯仰(Y轴)  4号舵机  行程±90°
+       joint4在link3的X=-0.076处, 翻转后在link2的X=+0.076处
+       ======================================================================== -->
+  <joint name="joint4" type="revolute">
+    <parent link="link3"/>
+    <child link="link4"/>
+    <origin xyz="-0.076 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.5708" upper="1.5708" effort="12" velocity="3.14"/>
+    <dynamics damping="0.15" friction="0.15"/>
+  </joint>
+
+  <!--  link4: 腕部短连接段, 0.012m (X轴反向，避免穿模) -->
+  <link name="link4">
+    <xacro:box_inertial mass="0.08" x="0.012" y="0.03" z="0.03"/>
+    <visual>
+      <origin xyz="-0.006 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.012 0.035 0.035"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <xacro:motor_visual xyz="0 0.020 0" rpy="0 0 0"/>
+    <collision>
+      <origin xyz="-0.006 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.012 0.030 0.030"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ========================================================================
+       joint5: 夹爪自转(X轴)  5号舵机  ±360°
+       (X轴反向：link5 在 link4 的 -X 方向)
+       ======================================================================== -->
+  <joint name="joint5" type="revolute">
+    <parent link="link4"/>
+    <child link="link5"/>
+    <origin xyz="-0.012 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-3.14159" upper="3.14159" effort="10" velocity="3.14"/>
+    <dynamics damping="0.1" friction="0.1"/>
+  </joint>
+
+  <!--  link5: 夹爪基座, 0.022m  -->
+  <link name="link5">
+    <xacro:box_inertial mass="0.10" x="0.022" y="0.03" z="0.03"/>
+    <visual>
+      <origin xyz="0.011 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.022 0.035 0.035"/>
+      </geometry>
+      <material name="white_pla"/>
+    </visual>
+    <xacro:motor_visual xyz="0.011 0 0" rpy="0 1.5708 0"/>
+    <collision>
+      <origin xyz="0.011 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.022 0.030 0.030"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ========================================================================
+       joint6: 夹爪开合(旋转Y轴)  6号舵机  0-90°
+       ======================================================================== -->
+  <joint name="joint6" type="revolute">
+    <parent link="link5"/>
+    <child link="gripper_left"/>
+    <origin xyz="0.022 0.007 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="1.5708" effort="5" velocity="3.14"/>
+    <dynamics damping="0.3" friction="0.3"/>
+  </joint>
+  <joint name="gripper_right_joint" type="revolute">
+    <parent link="link5"/>
+    <child link="gripper_right"/>
+    <origin xyz="0.022 -0.007 0" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit lower="0" upper="1.5708" effort="5" velocity="3.14"/>
+    <dynamics damping="0.3" friction="0.3"/>
+    <mimic joint="joint6" multiplier="1" offset="0"/>
+  </joint>
+
+  <!--  gripper_left: 左爪, 红色, 0.05m  -->
+  <link name="gripper_left">
+    <xacro:box_inertial mass="0.02" x="0.05" y="0.006" z="0.025"/>
+    <visual>
+      <origin xyz="0.025 0.012 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.008 0.025"/>
+      </geometry>
+      <material name="red_gripper"/>
+    </visual>
+    <visual>
+      <origin xyz="0.045 0.002 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.015 0.005 0.006"/>
+      </geometry>
+      <material name="red_gripper"/>
+    </visual>
+    <collision>
+      <origin xyz="0.025 0.012 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.006 0.022"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!--  gripper_right: 右爪, 红色, 0.05m  -->
+  <link name="gripper_right">
+    <xacro:box_inertial mass="0.02" x="0.05" y="0.006" z="0.025"/>
+    <visual>
+      <origin xyz="0.025 -0.012 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.008 0.025"/>
+      </geometry>
+      <material name="red_gripper"/>
+    </visual>
+    <visual>
+      <origin xyz="0.045 -0.002 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.015 0.005 0.006"/>
+      </geometry>
+      <material name="red_gripper"/>
+    </visual>
+    <collision>
+      <origin xyz="0.025 -0.012 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.006 0.022"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!--  tool0: TCP, 夹爪中间向前0.057m  -->
+  <link name="tool0">
+    <inertial>
+      <mass value="1e-9"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+  <joint name="tool0_joint" type="fixed">
+    <parent link="link5"/>
+    <child link="tool0"/>
+    <origin xyz="0.057 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 0"/>
+  </joint>
+
+  <!--  ros2_control 传动 -->
+  <xacro:macro name="transmission" params="joint_name">
+    <transmission name="${joint_name}_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${joint_name}">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${joint_name}_motor">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+  <xacro:transmission joint_name="joint1"/>
+  <xacro:transmission joint_name="joint2"/>
+  <xacro:transmission joint_name="joint3"/>
+  <xacro:transmission joint_name="joint4"/>
+  <xacro:transmission joint_name="joint5"/>
+  <xacro:transmission joint_name="joint6"/>
+
+</robot>

@@ -219,3 +219,9 @@ __marimo__/
 
 # Robot arm camera recordings (large videos, generated locally)
 camera_recordings/
+
+# ROS2 workspace artifacts (generated on Linux, not needed in repo)
+linux_ros2/**/.ros_log/
+linux_ros2/**/build/
+linux_ros2/**/install/
+linux_ros2/**/log/

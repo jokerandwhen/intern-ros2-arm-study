@@ -1,0 +1,20 @@
+# URDF 关节限位参数 (直接复制到 soarm101.xacro)
+
+<!-- joint1 (shoulder_pan) -->
+<limit lower="0.0000" upper="3.1170" effort="15" velocity="3.14"/>
+
+<!-- joint2 (shoulder_lift) -->
+<limit lower="0.0000" upper="3.1309" effort="15" velocity="3.14"/>
+
+<!-- joint3 (elbow_flex) -->
+<limit lower="0.0000" upper="3.1493" effort="15" velocity="3.14"/>
+
+<!-- joint4 (wrist_flex) -->
+<limit lower="0.0000" upper="3.1063" effort="15" velocity="3.14"/>
+
+<!-- joint5 (wrist_roll) -->
+<limit lower="0.0000" upper="3.1784" effort="15" velocity="3.14"/>
+
+<!-- joint6 (gripper) -->
+<limit lower="0.0000" upper="0.0242" effort="5" velocity="0.05"/>
+
